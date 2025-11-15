@@ -3,6 +3,6 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "/cat-swipe-app/",
+  base: '/cat-swipe-app/',
   plugins: [react()],
 })
