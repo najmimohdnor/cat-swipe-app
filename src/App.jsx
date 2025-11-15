@@ -16,7 +16,7 @@ const CatSwipeApp = () => {
   useEffect(() => {
     const catImages = Array.from({ length: 15 }, (_, i) => ({
       id: i,
-      url: `https://cataas.com/cat?width=500&height=600&${Date.now()}_${i}`,
+      url: `https://cataas.com/cat?width=500&height=600&idx=${i}&t=${Date.now()}`,
     }));
     setCats(catImages);
   }, []);
