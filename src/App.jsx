@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, X, RotateCcw, Sparkles } from 'lucide-react';
+import { Heart, X, RotateCcw, Sparkles, AlertCircle } from 'lucide-react';
 
 const CatSwipeApp = () => {
   const [cats, setCats] = useState([]);
@@ -10,15 +10,23 @@ const CatSwipeApp = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
   const cardRef = useRef(null);
 
-  // Generate 15 unique cat images
+  // Generate 15 unique cat images with error handling
   useEffect(() => {
-    const catImages = Array.from({ length: 15 }, (_, i) => ({
-      id: i,
-      url: `https://cataas.com/cat?width=500&height=600&idx=${i}&t=${Date.now()}`,
-    }));
-    setCats(catImages);
+    try {
+      const catImages = Array.from({ length: 15 }, (_, i) => ({
+        id: i,
+        url: `https://cataas.com/cat?width=500&height=600&idx=${i}&t=${Date.now()}`,
+      }));
+      setCats(catImages);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to load cats. Please refresh the page.');
+      setLoading(false);
+    }
   }, []);
 
   // Preload next image
@@ -28,10 +36,15 @@ const CatSwipeApp = () => {
       const img = new Image();
       img.src = cats[currentIndex].url;
       img.onload = () => setImageLoaded(true);
+      img.onerror = () => {
+        console.error('Failed to load image:', cats[currentIndex].url);
+        setImageLoaded(true); // Still show something
+      };
     }
   }, [currentIndex, cats]);
 
   const handleDragStart = (e) => {
+    e.preventDefault();
     const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
     const clientY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
     setDragStart({ x: clientX, y: clientY });
@@ -96,6 +109,25 @@ const CatSwipeApp = () => {
     setDragOffset({ x: 0, y: 0 });
     setDragStart(null);
   };
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops!</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-3 rounded-xl font-bold"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const rotation = dragOffset.x * 0.15;
   const scale = Math.max(0.85, 1 - Math.abs(dragOffset.x) / 500);
@@ -166,7 +198,7 @@ const CatSwipeApp = () => {
     );
   }
 
-  if (cats.length === 0) {
+  if (loading || cats.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center">
         <div className="text-center">
